@@ -14,6 +14,7 @@ class PlagiarismCompare:
             self.__read_files()
 
         self.__parse_files()
+        self.html_formatter = HtmlFormatter(self)
 
     def __read_files(self):
         if self.path != None:
@@ -40,12 +41,13 @@ class PlagiarismCompare:
                 print(f'Could not parse file {key}')
 
     def compare(self, score_function):
-        self.result = [None*len(self.contents)
+        self.result = [[None]*len(self.contents)
                        for ignored in range(len(self.contents))]
 
+        results = list(self.parsed_files.values())
         for i in range(0, len(self.contents) - 1):
             for j in range(i + 1, len(self.contents)):
-                lhs = self.parsed_files.values[i]
-                rhs = self.parsed_files.values[j]
+                lhs = results[i]
+                rhs = results[j]
                 self.result[i][j] = 0 if lhs == None or rhs == None else score_function(
-                    lhs, rhs)
+                    lhs.tokens_table, rhs.tokens_table)
