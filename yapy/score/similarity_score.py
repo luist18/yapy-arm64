@@ -1,4 +1,4 @@
-def similarity_score(lhs, rhs):
+def sorensen_dice_coefficient(lhs, rhs):
     similarity_score = 0
     max_score = 0
 

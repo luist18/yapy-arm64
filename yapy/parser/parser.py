@@ -1,7 +1,5 @@
-from os.path import isfile, join
-from os import listdir
 from lark import Lark
-from parser_result import ParserResult
+from .parser_result import ParserResult
 
 arm64_parser = Lark(r"""
     program: header* (label | instruction)*
@@ -226,65 +224,7 @@ arm64_parser = Lark(r"""
 
 
 class Parser:
-    def __init__(self, content):
-        pass
-        self.content = content
-        self.result = ParserResult(arm64_parser.parse(content))
 
     @staticmethod
     def parse(content):
         return ParserResult(arm64_parser.parse(content))
-
-
-def similarity_score(lhs, rhs):
-    similarity_score = 0
-    max_score = 0
-
-    for element in lhs:
-        max_score += lhs[element]
-        if element in rhs:
-            similarity_score += min(lhs[element], rhs[element])
-
-    for element in rhs:
-        max_score += rhs[element]
-
-    if max_score == 0:
-        return 0
-
-    return round(similarity_score * 2 / max_score * 100, 3)
-
-
-onlyfiles = [f for f in listdir('testfiles') if isfile(join('testfiles', f))]
-
-results = [['null']*len(onlyfiles) for _ in range(len(onlyfiles))]
-
-for i in range(0, len(onlyfiles) - 1):
-    for j in range(i + 1, len(onlyfiles)):
-        results[i][j] = 1
-
-        #print(f'testfiles/{onlyfiles[j]}', f'testfiles/{onlyfiles[i]}')
-
-        file1 = open(f'testfiles/{onlyfiles[i]}', 'r').read()
-
-        file2 = open(f'testfiles/{onlyfiles[j]}', 'r').read()
-
-        p1 = Parser(file1)
-        p2 = Parser(file2)
-        results[i][j] = similarity_score(
-            p1.result.tokens_table, p2.result.tokens_table)
-
-        if (results[i][j]) == 100:
-            print(f'testfiles/{onlyfiles[j]}', f'testfiles/{onlyfiles[i]}')
-
-
-f = open("results.csv", "a")
-
-f.write("Resultados," + ",".join(onlyfiles) + "\n")
-
-index = 0
-for row in results:
-    current_row = [str(i) for i in row]
-    elements = [onlyfiles[index]] + current_row
-    index += 1
-
-    f.write(",".join(elements) + "\n")
