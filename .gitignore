@@ -1,4 +1,5 @@
 testfiles/
+test/resources/**
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
