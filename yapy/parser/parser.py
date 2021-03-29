@@ -1,5 +1,5 @@
 from lark import Lark
-from .parser_result import ParserResult
+from yapy.parser.parser_result import ParserResult
 
 arm64_parser = Lark(r"""
     program: header* (label | instruction)*

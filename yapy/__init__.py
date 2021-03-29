@@ -1,1 +1,1 @@
-from .compare.plagiarism_compare import PlagiarismCompare
+from yapy.compare.plagiarism_compare import PlagiarismCompare

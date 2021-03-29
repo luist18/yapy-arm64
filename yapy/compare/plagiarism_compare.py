@@ -1,6 +1,6 @@
 import os
-from ..parser import Parser
-from .output.html_formatter import HtmlFormatter
+from yapy.parser.parser import Parser
+from yapy.compare.output.html_formatter import HtmlFormatter
 
 
 class PlagiarismCompare:

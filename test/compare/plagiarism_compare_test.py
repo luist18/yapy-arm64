@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from yapy import PlagiarismCompare
-from yapy.score import sorensen_dice_coefficient
+from yapy.score.similarity_score import sorensen_dice_coefficient
 
 
 class PlagiarismCompareTest(TestCase):

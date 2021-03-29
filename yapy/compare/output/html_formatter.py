@@ -1,6 +1,4 @@
-import os
-from os.path import join
-from .formatter import OutputFormatter
+from yapy.compare.output.formatter import OutputFormatter
 
 
 class HtmlFormatter(OutputFormatter):
