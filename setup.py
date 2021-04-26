@@ -7,10 +7,12 @@ with open('requirements.txt') as f:
     required = f.read().splitlines()
 
 setup(
-    name="yapy",
+    name="yapy-arm64",
     version="0.1",
     author="Luis Tavares",
     python_requires='>=3.6',
+    long_description_content_type='text/markdown',
+    long_description=long_description,
     install_requires=required,
     packages=find_packages(),
     classifiers=[
