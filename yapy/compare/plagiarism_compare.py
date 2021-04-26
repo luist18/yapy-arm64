@@ -5,10 +5,11 @@ from yapy.compare.output.html_formatter import HtmlFormatter
 
 class PlagiarismCompare:
 
-    def __init__(self, files=None, path=None, contents=None):
+    def __init__(self, files=None, path=None, contents=None, threshold=None):
         self.files = files
         self.path = path
         self.contents = contents
+        self.threshold = threshold
 
         if contents == None:
             self.__read_files()
@@ -26,7 +27,8 @@ class PlagiarismCompare:
         for filepath in self.files:
             try:
                 basename = os.path.basename(filepath)
-                self.contents[basename] = open(filepath, 'r').read()
+                self.contents[basename] = open(
+                    filepath, 'r', encoding='utf8', errors='replace').read()
             except:
                 print(f'Could not read file from path {filepath}')
 
@@ -36,7 +38,8 @@ class PlagiarismCompare:
         for key, value in self.contents.items():
             try:
                 self.parsed_files[key] = Parser.parse(value)
-            except:
+            except Exception as e:
+                print(e)
                 self.parsed_files[key] = None
                 print(f'Could not parse file {key}')
 
@@ -49,5 +52,14 @@ class PlagiarismCompare:
             for j in range(i + 1, len(self.contents)):
                 lhs = results[i]
                 rhs = results[j]
-                self.result[i][j] = 0 if lhs == None or rhs == None else score_function(
-                    lhs.tokens_table, rhs.tokens_table)
+
+                if lhs is None or rhs is None:
+                    score = None
+                else:
+                    tmp_score = score_function(
+                        lhs.tokens_table, rhs.tokens_table)
+
+                    print(self.threshold is not None and tmp_score >= self.threshold)
+                    score = None if self.threshold is not None and tmp_score < self.threshold else tmp_score
+
+                self.result[i][j] = score

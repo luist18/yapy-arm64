@@ -11,16 +11,18 @@ arm64_parser = Lark(r"""
             | ".type" /.+/
 
 
-    int_constant: "#"? "-"? INT
+    int_constant: "#"? "-"? INT | "0x"i HEXDIGIT+
+
+    char: /"."/ | /'.'/
 
     w_register: "w"i INT
     x_register: "x"i INT
 
     ?normal_register: w_register | x_register
 
-    ?op: normal_register | int_constant
+    ?op: normal_register | int_constant | char | "sp"i
 
-    address: "[" x_register ("," int_constant)? "]" "!"? ("," int_constant)?
+    address: "[" (x_register | CNAME) ("," op)? "]" "!"? ("," op)?
 
     ?cc: "lo"i
         | "hi"i
@@ -212,6 +214,7 @@ arm64_parser = Lark(r"""
 
     %import common.WORD
     %import common.CNAME
+    %import common.HEXDIGIT
     %import common.INT
     %import common.WS
     %import common.CPP_COMMENT
