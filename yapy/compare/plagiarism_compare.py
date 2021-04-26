@@ -60,8 +60,7 @@ class PlagiarismCompare:
                 else:
                     tmp_score = score_function(
                         lhs.tokens_table, rhs.tokens_table)
-
-                    print(self.threshold is not None and tmp_score >= self.threshold)
+                        
                     score = None if self.threshold is not None and tmp_score < self.threshold else tmp_score
 
                 self.result[i][j] = score
