@@ -4,11 +4,12 @@ from yapy.parser.parser_result import ParserResult
 arm64_parser = Lark(r"""
     program: header* (label | instruction)*
 
-    label: CNAME ":"
+    label: (INT | CNAME)* ":"
 
-    header: ".text"
-            | ".global" /.+/
-            | ".type" /.+/
+    header: ".text"i
+            | ".global"i /.+/
+            | ".type"i /.+/
+            | ".model"i /.+/
 
 
     int_constant: "#"? "-"? INT | "0x"i HEXDIGIT+
@@ -20,7 +21,9 @@ arm64_parser = Lark(r"""
 
     ?normal_register: w_register | x_register
 
-    ?op: normal_register | int_constant | char | "sp"i
+    ?goto: (INT | CNAME)*
+
+    ?op: normal_register | int_constant | char | "sp"i | goto
 
     address: "[" (x_register | CNAME) ("," op)? "]" "!"? ("," op)?
 
@@ -132,15 +135,15 @@ arm64_parser = Lark(r"""
     ?compare_instructions: cmp
                             | cmn
                             
-    add: ("add"i | "adds"i) normal_register "," normal_register "," op
-    sub: ("sub"i | "subs"i) normal_register "," normal_register "," op
+    add: ("add"i | "adds"i) normal_register "," op "," op
+    sub: ("sub"i | "subs"i) normal_register "," op "," op
     neg: ("neg"i | "negs"i) normal_register "," op
-    ngc: ("ngc"i | "ngc"i) normal_register "," normal_register
-    mul: "mul"i normal_register "," normal_register "," normal_register
-    umull: "umull"i x_register "," w_register "," w_register
-    umulh: "umulh"i x_register "," x_register "," x_register
-    smull: "smull"i x_register "," w_register "," w_register
-    smulh: "smulh"i x_register "," x_register "," x_register
+    ngc: ("ngc"i | "ngc"i) normal_register "," op
+    mul: "mul"i normal_register "," op "," op
+    umull: "umull"i x_register "," op "," op
+    umulh: "umulh"i x_register "," op "," op
+    smull: "smull"i x_register "," op "," op
+    smulh: "smulh"i x_register "," op "," op
     madd: "madd"i normal_register "," normal_register "," normal_register "," normal_register
     msub: "msub"i normal_register "," normal_register "," normal_register "," normal_register
     mneg: "mneg"i normal_register "," normal_register "," normal_register
@@ -178,39 +181,39 @@ arm64_parser = Lark(r"""
     rev16: "rev16"i normal_register "," normal_register
     rev32: "rev32"i x_register "," x_register
 
-    str: "str"i normal_register "," address
-    strb: "strb"i w_register "," address
-    strh: "strh"i w_register "," address
-    stur: "stur"i normal_register "," address
-    stp: "stp"i normal_register "," normal_register "," address
-    ldr: "ldr"i normal_register "," address
-    ldrb: "ldrb"i w_register "," address
-    ldrsb: "ldrsb"i normal_register "," address
-    ldrh: "ldrh"i w_register "," address
-    ldrsh: "ldrsh"i normal_register "," address
-    ldrsw: "ldrsw"i x_register "," address
-    ldur: "ldur"i normal_register "," address
-    ldp: "ldp"i normal_register "," normal_register "," address
+    str: "str"i op "," address
+    strb: "strb"i op "," address
+    strh: "strh"i op "," address
+    stur: "stur"i op "," address
+    stp: "stp"i op "," op "," address
+    ldr: "ldr"i op "," address
+    ldrb: "ldrb"i op "," address
+    ldrsb: "ldrsb"i op "," address
+    ldrh: "ldrh"i op "," address
+    ldrsh: "ldrsh"i op "," address
+    ldrsw: "ldrsw"i op "," address
+    ldur: "ldur"i op "," address
+    ldp: "ldp"i op "," normal_register "," address
 
-    b: "b"i CNAME
-    bl: "bl"i CNAME
+    b: "b"i goto
+    bl: "bl"i goto
     ret: "ret"i x_register?
-    bcc: ("b."i | "b"i) cc CNAME
-    cbz: "cbz"i normal_register "," CNAME
-    cbnz: "cbnz"i normal_register "," CNAME
+    bcc: ("b."i | "b"i) cc goto
+    cbz: "cbz"i normal_register "," goto
+    cbnz: "cbnz"i normal_register "," goto
 
-    csel: "csel"i normal_register "," normal_register "," normal_register "," cc
-    csinc: "csinc"i normal_register "," normal_register "," normal_register "," cc
-    csneg: "csneg"i normal_register "," normal_register "," normal_register "," cc
-    csinv: "csinv"i normal_register "," normal_register "," normal_register "," cc
-    cset: "cset"i normal_register "," cc
-    csetm: "csetm"i normal_register "," cc
-    cinc: "cinc"i normal_register "," normal_register "," cc
-    cneg: "cneg"i normal_register "," normal_register "," cc
-    cinv: "cinv"i normal_register "," normal_register "," cc
+    csel: "csel"i op "," op "," op "," cc
+    csinc: "csinc"i op "," op "," op "," cc
+    csneg: "csneg"i op "," op "," op "," cc
+    csinv: "csinv"i op "," op "," op "," cc
+    cset: "cset"i op "," cc
+    csetm: "csetm"i op "," cc
+    cinc: "cinc"i op "," op "," cc
+    cneg: "cneg"i op "," op "," cc
+    cinv: "cinv"i op "," op "," cc
 
-    cmp: "cmp"i normal_register "," op
-    cmn: "cmn"i normal_register "," normal_register
+    cmp: "cmp"i op "," op
+    cmn: "cmn"i op "," op
 
     %import common.WORD
     %import common.CNAME
