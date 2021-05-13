@@ -10,9 +10,10 @@ arm64_parser = Lark(r"""
             | ".global"i /.+/
             | ".type"i /.+/
             | ".model"i /.+/
+            | ".align"i /.+/
 
 
-    int_constant: "#"? "-"? INT | "0x"i HEXDIGIT+
+    int_constant: "#"? ("-"? INT | "0x"i HEXDIGIT+)
 
     char: /"."/ | /'.'/
 
@@ -44,14 +45,14 @@ arm64_parser = Lark(r"""
         | "cs"i
         | "cc"i
 
-    ?instruction: arithmetic_instruction
+    ?instruction: (arithmetic_instruction
                 | bitwise_logical_instruction
                 | bitfield_instruction
                 | bit_byte_instruction
                 | load_store_instruction
                 | branch_instructions
                 | conditional_instructions
-                | compare_instructions
+                | compare_instructions) ";"?
 
     ?arithmetic_instruction: add
                             | sub
@@ -163,7 +164,7 @@ arm64_parser = Lark(r"""
     eor: "eor"i normal_register "," normal_register "," op
     eon: "eon"i normal_register "," normal_register "," op
     lsl: "lsl"i normal_register "," normal_register "," op
-    lsr: "lsr"i normal_register "," normal_register "," normal_register
+    lsr: "lsr"i normal_register "," normal_register "," op
     asr: "asr"i normal_register "," normal_register "," op
     ror: "ror"i normal_register "," normal_register "," op
     mov: "mov"i normal_register "," op

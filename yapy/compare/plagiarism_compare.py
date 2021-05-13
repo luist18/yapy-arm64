@@ -1,4 +1,5 @@
 import os
+from yapy.compare.output.csv_formatter import CSVFormatter
 from yapy.compare.output.json_formatter import JSONFormatter
 from yapy.parser.parser import Parser
 from yapy.compare.output.html_formatter import HtmlFormatter
@@ -18,6 +19,7 @@ class PlagiarismCompare:
         self.__parse_files()
         self.html_formatter = HtmlFormatter(self)
         self.json_formatter = JSONFormatter(self)
+        self.csv_formatter = CSVFormatter(self)
 
     def __read_files(self):
         if self.path != None:
