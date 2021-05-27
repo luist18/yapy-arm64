@@ -1,0 +1,33 @@
+import os
+
+from yapy.parser.parser import Parser
+
+
+class FileInstance:
+
+    def __init__(self, path):
+        self.path = path
+
+        self.__read_file()
+        self.__parse_file()
+
+    def __read_file(self):
+        try:
+            self.name = os.path.basename(self.path)
+            self.contents = open(
+                self.path, 'r', encoding='utf8', errors='replace').read()
+        except:
+            print(f'Could not read file from path {self.path}')
+
+    def __parse_file(self):
+        try:
+            self.parsed_file = Parser.parse(self.contents)
+        except Exception as e:
+            self.parsed_file = None
+            print(f'Could not parse file {self.name}\n{e}')
+
+    def is_valid(self):
+        return self.parsed_file is not None
+
+    def tokens_table(self):
+        return self.parsed_file.tokens_table

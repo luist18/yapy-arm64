@@ -4,7 +4,7 @@ from yapy.parser.parser_result import ParserResult
 arm64_parser = Lark(r"""
     program: header* (label | instruction)*
 
-    label: (INT | CNAME)* ":"
+    label: CNAME ":"
 
     header: ".text"i
             | ".global"i /.+/
@@ -20,11 +20,11 @@ arm64_parser = Lark(r"""
     w_register: "w"i INT
     x_register: "x"i INT
 
-    ?normal_register: w_register | x_register
+    ?normal_register: w_register | x_register | int_constant
 
-    ?goto: (INT | CNAME)*
+    ?goto: CNAME
 
-    ?op: normal_register | int_constant | char | "sp"i | goto
+    ?op: "sp"i | normal_register | char | goto
 
     address: "[" (x_register | CNAME) ("," op)? "]" "!"? ("," op)?
 
@@ -102,26 +102,26 @@ arm64_parser = Lark(r"""
                             | rev16
                             | rev32
                         
-    ?load_store_instruction: str
-                            | strb
+    ?load_store_instruction: strb
                             | strh
                             | stur
+                            | str
                             | stp
-                            | ldr
-                            | ldrb
                             | ldrsb
-                            | ldrh
                             | ldrsh
                             | ldrsw
+                            | ldrb
+                            | ldrh
                             | ldur
+                            | ldr
                             | ldp
 
-    ?branch_instructions: b
+    ?branch_instructions: bcc
                         | bl
+                        | b
                         | ret
-                        | bcc
-                        | cbz
                         | cbnz
+                        | cbz
     
     ?conditional_instructions: csel
                                 | csinc
@@ -187,9 +187,9 @@ arm64_parser = Lark(r"""
     strh: "strh"i op "," address
     stur: "stur"i op "," address
     stp: "stp"i op "," op "," address
-    ldr: "ldr"i op "," address
-    ldrb: "ldrb"i op "," address
     ldrsb: "ldrsb"i op "," address
+    ldrb: "ldrb"i op "," address
+    ldr: "ldr"i op "," address
     ldrh: "ldrh"i op "," address
     ldrsh: "ldrsh"i op "," address
     ldrsw: "ldrsw"i op "," address
