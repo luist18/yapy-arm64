@@ -13,18 +13,24 @@ arm64_parser = Lark(r"""
             | ".align"i /.+/
 
 
-    int_constant: "#"? ("-"? INT | "0x"i HEXDIGIT+)
+    int_constant: "#"? ("-"? INT |("-"? "0x"i HEXDIGIT+))
 
     char: /"."/ | /'.'/
 
     w_register: "w"i INT
     x_register: "x"i INT
 
+    d_register: "d"i INT
+    s_register: "s"i INT
+    h_register: "h"i INT
+
     ?normal_register: w_register | x_register | int_constant
+
+    ?fp_register: d_register | s_register | h_register | int_constant
 
     ?goto: CNAME
 
-    ?op: "sp"i | normal_register | char | goto
+    ?op: "sp"i | normal_register | fp_register | | char | goto
 
     address: "[" (x_register | CNAME) ("," op)? "]" "!"? ("," op)?
 
@@ -213,8 +219,34 @@ arm64_parser = Lark(r"""
     cneg: "cneg"i op "," op "," cc
     cinv: "cinv"i op "," op "," cc
 
-    cmp: "cmp"i op "," op
+    cmp: "f"? "cmp"i op "," op
     cmn: "cmn"i op "," op
+
+    fadd: "fadd"i fp_register "," fp_register "," op
+    fsub: "fsub"i fp_register "," fp_register "," op
+    fmul: "fmul"i fp_register "," fp_register "," op
+    fnmul: "fnmul"i fp_register "," fp_register "," op
+    fmadd: "fmadd"i fp_register "," fp_register "," op "," op
+    fnmadd: "fnmadd"i fp_register "," fp_register "," op "," op
+    fmsub: "fmsub"i fp_register "," fp_register "," op "," op
+    fnmsub: "fnmsub"i fp_register "," fp_register "," op "," op
+    fdiv: "fdiv"i fp_register "," fp_register "," op
+    fneg: "fneg"i fp_register "," op
+    fabs: "fabs"i fp_register "," op
+    fmax: "fmax"i fp_register "," op
+    fmin: "fmin"i fp_register "," op
+    fsqrt: "fsqrt"i fp_register "," op
+    frinti: "frinti"i fp_register "," op
+    
+    fmov: "fmov"i fp_register "," op
+    fcsel: "fcsel"i op "," op "," op "," cc
+    fccmp: "fccmp"i op "," op "," op "," cc
+
+    fcvt: "fcvt"i fp_register "," op
+    scvtf: "scvtf"i fp_register "," op
+    ucvtf: "ucvtf"i fp_register "," op
+    fcvtns: "fcvtns"i fp_register "," op
+    fcvtnu: "fcvtnu"i fp_register "," op
 
     %import common.WORD
     %import common.CNAME
