@@ -4,16 +4,17 @@ from yapy.parser.parser_result import ParserResult
 arm64_parser = Lark(r"""
     program: header* (label | instruction)*
 
-    label: CNAME ":"
+    label: "."? CNAME ":"
 
     header: ".text"i
             | ".global"i /.+/
             | ".type"i /.+/
             | ".model"i /.+/
             | ".align"i /.+/
+            | ".extern"i /.+/
 
 
-    int_constant: "#"? ("-"? INT |("-"? "0x"i HEXDIGIT+))
+    int_constant: "#"? (("-" | "+")? INT | (("-" | "+")? "0x"i HEXDIGIT+))
 
     char: /"."/ | /'.'/
 
@@ -28,9 +29,13 @@ arm64_parser = Lark(r"""
 
     ?fp_register: d_register | s_register | h_register | int_constant
 
-    ?goto: CNAME
+    ?goto: "."? CNAME
 
-    ?op: "sp"i | normal_register | fp_register | | char | goto
+    ?op_t: "sp"i | normal_register | fp_register | char | goto
+
+    ?op: op_t ("," op2)?
+
+    ?op2: osxtw | osxtb | olsl | olsr | oasr | ouxtw | ouxtb
 
     address: "[" (x_register | CNAME) ("," op)? "]" "!"? ("," op)?
 
@@ -58,7 +63,8 @@ arm64_parser = Lark(r"""
                 | load_store_instruction
                 | branch_instructions
                 | conditional_instructions
-                | compare_instructions) ";"?
+                | compare_instructions
+                | advanced_instructions) ";"?
 
     ?arithmetic_instruction: add
                             | sub
@@ -118,6 +124,7 @@ arm64_parser = Lark(r"""
                             | ldrsw
                             | ldrb
                             | ldrh
+                            | ldurb
                             | ldur
                             | ldr
                             | ldp
@@ -141,12 +148,33 @@ arm64_parser = Lark(r"""
 
     ?compare_instructions: cmp
                             | cmn
+
+    ?advanced_instructions: sxtb
+                            | sxtw
+                            | uxtb
+                            | uxth
+                            | uxtw
+
+    sxtb: "sxtb"i op "," op
+    sxtw: "sxtw"i op "," op
+    uxtb: "uxtb"i op "," op
+    uxth: "uxth"i op "," op
+    uxtw: "uxtw"i op "," op
+
+    osxtw: "sxtw"i op_t?
+    osxtb: "sxtb"i op_t?
+    olsl: "lsl"i op_t?
+    olsr: "lsr"i op_t?
+    oasr: "asr"i op_t?
+    ouxtw: "uxtb"i op_t?
+    ouxtb: "uxtw"i op_t?
+
                             
-    add: ("add"i | "adds"i) normal_register "," op "," op
-    sub: ("sub"i | "subs"i) normal_register "," op "," op
-    neg: ("neg"i | "negs"i) normal_register "," op
-    ngc: ("ngc"i | "ngc"i) normal_register "," op
-    mul: "mul"i normal_register "," op "," op
+    add: ("add"i | "adds"i) op "," op "," op
+    sub: ("sub"i | "subs"i) op "," op "," op
+    neg: ("neg"i | "negs"i) op "," op
+    ngc: ("ngc"i | "ngc"i) op "," op
+    mul: "mul"i op "," op "," op
     umull: "umull"i x_register "," op "," op
     umulh: "umulh"i x_register "," op "," op
     smull: "smull"i x_register "," op "," op
@@ -154,10 +182,10 @@ arm64_parser = Lark(r"""
     madd: "madd"i normal_register "," normal_register "," normal_register "," normal_register
     msub: "msub"i normal_register "," normal_register "," normal_register "," normal_register
     mneg: "mneg"i normal_register "," normal_register "," normal_register
-    umaddl: "umaddl"i x_register "," w_register "," w_register "," x_register
+    umaddl: "umaddl"i x_register "," w_register "," w_register "," op
     umsubl: "umsubl"i x_register "," w_register "," w_register "," x_register
     umnegl: "umnegl"i x_register "," w_register "," w_register
-    smaddl: "smaddl"i x_register "," w_register "," w_register "," x_register
+    smaddl: "smaddl"i x_register "," w_register "," w_register "," op
     smsubl: "smsubl"i x_register "," w_register "," w_register "," x_register
     smnegl: "smnegl"i x_register "," w_register "," w_register
     udiv: "udiv"i normal_register "," normal_register "," normal_register
@@ -173,7 +201,7 @@ arm64_parser = Lark(r"""
     lsr: "lsr"i normal_register "," normal_register "," op
     asr: "asr"i normal_register "," normal_register "," op
     ror: "ror"i normal_register "," normal_register "," op
-    mov: "mov"i normal_register "," op
+    mov: "mov"i op "," op
     mvn: "mvn"i normal_register "," op
     tst: "tst"i normal_register "," op
 
@@ -199,8 +227,9 @@ arm64_parser = Lark(r"""
     ldrh: "ldrh"i op "," address
     ldrsh: "ldrsh"i op "," address
     ldrsw: "ldrsw"i op "," address
+    ldurb: "ldurb"i op "," address
     ldur: "ldur"i op "," address
-    ldp: "ldp"i op "," normal_register "," address
+    ldp: "ldp"i op "," op "," address
 
     b: "b"i goto
     bl: "bl"i goto

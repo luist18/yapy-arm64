@@ -1,4 +1,6 @@
 import os
+import re
+import unidecode
 
 from yapy.parser.parser import Parser
 
@@ -14,8 +16,16 @@ class FileInstance:
     def __read_file(self):
         try:
             self.name = os.path.basename(self.path)
-            self.contents = open(
+
+            match = re.search(r"(.*_)?.*?_up(\d{9})_.*\.s$", self.name)
+
+            if match:
+                self.name = match.group(2)
+                
+            contents = open(
                 self.path, 'r', encoding='utf8', errors='replace').read()
+
+            self.contents = unidecode.unidecode(contents)
         except:
             print(f'Could not read file from path {self.path}')
 
