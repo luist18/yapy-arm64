@@ -11,6 +11,14 @@ class OutputFormatter(ABC):
     def format(self):
         pass
 
+    @abstractmethod
+    def format_suspicious(self):
+        pass
+
     def export(self, path):
         file = open(path, "w")
         file.write(self.format())
+
+    def export_suspicious(self, path):
+        file = open(path, "w")
+        file.write(self.format_suspicious())

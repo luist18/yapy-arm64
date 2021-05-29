@@ -37,3 +37,7 @@ class CSVFormatter(OutputFormatter):
             table += self.__draw_row(row)
 
         return table
+    
+    def format_suspicious(self):
+        # todo
+        return ""

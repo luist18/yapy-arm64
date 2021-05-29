@@ -33,3 +33,6 @@ class JSONFormatter(OutputFormatter):
             })
 
         return json.dumps(result, indent=4)
+
+    def format_suspicious(self):
+        return json.dumps(self.plagiarism_compare.result_files, indent=4)

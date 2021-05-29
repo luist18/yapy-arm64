@@ -34,3 +34,7 @@ class HtmlFormatter(OutputFormatter):
             table += self.__draw_row(row)
 
         return f'<table>{table}</table>'
+
+    def format_suspicious(self):
+        # todo
+        return ""

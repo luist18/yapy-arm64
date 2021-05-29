@@ -13,6 +13,7 @@ class PlagiarismCompare:
         self.files = files
         self.path = path
         self.threshold = threshold
+        self.result_files = []
 
         self.__read_files()
         self.html_formatter = HtmlFormatter(self)
@@ -53,6 +54,14 @@ class PlagiarismCompare:
                     tmp_score = score_function(
                         lhs.tokens_table(), rhs.tokens_table())
 
-                    score = None if self.threshold is not None and tmp_score < self.threshold else tmp_score
+                    if self.threshold is None or tmp_score >= self.threshold:
+                        score = tmp_score
+                        self.result_files.append({
+                            "lhs": lhs.original_name,
+                            "rhs": rhs.original_name,
+                            "similarity": score
+                        })
+                    else:
+                        score = None
 
                 self.result[i][j] = score

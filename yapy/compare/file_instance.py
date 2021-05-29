@@ -16,6 +16,7 @@ class FileInstance:
     def __read_file(self):
         try:
             self.name = os.path.basename(self.path)
+            self.original_name = self.name
 
             match = re.search(r"(.*_)?.*?_up(\d{9})_.*\.s$", self.name)
 
