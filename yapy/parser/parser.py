@@ -7,14 +7,16 @@ arm64_parser = Lark(r"""
     label: "."? CNAME ":"
 
     header: ".text"i
+            | ".data"
+            | CNAME ":" (".double" | ".quad" | ".int" | ".float") ("+" | "-")? (HEXDIGIT | DECIMAL | INT)
             | ".global"i /.+/
-            | ".type"i /.+/
+            | ".type"i (CNAME)? /.+/
             | ".model"i /.+/
             | ".align"i /.+/
             | ".extern"i /.+/
 
 
-    int_constant: "#"? (("-" | "+")? INT | (("-" | "+")? "0x"i HEXDIGIT+))
+    int_constant: "#"? (("-" | "+")? (INT | DECIMAL) | (("-" | "+")? "0x"i HEXDIGIT+))
 
     char: /"."/ | /'.'/
 
@@ -37,7 +39,7 @@ arm64_parser = Lark(r"""
 
     ?op2: osxtw | osxtb | olsl | olsr | oasr | ouxtw | ouxtb
 
-    address: "[" (x_register | CNAME) ("," op)? "]" "!"? ("," op)?
+    address: CNAME | "[" (x_register | CNAME) ("," op)? "]" "!"? ("," op)?
 
     ?cc: "lo"i
         | "hi"i
@@ -64,7 +66,8 @@ arm64_parser = Lark(r"""
                 | branch_instructions
                 | conditional_instructions
                 | compare_instructions
-                | advanced_instructions) ";"?
+                | advanced_instructions
+                | fp_instructions) ";"?
 
     ?arithmetic_instruction: add
                             | sub
@@ -154,6 +157,31 @@ arm64_parser = Lark(r"""
                             | uxtb
                             | uxth
                             | uxtw
+                       
+    ?fp_instructions: fadd
+                    | fsub
+                    | fmul
+                    | fnmul
+                    | fmadd
+                    | fnmadd
+                    | fmsub
+                    | fnmsub
+                    | fdiv
+                    | fneg
+                    | fabs
+                    | fmax
+                    | fmin
+                    | fsqrt
+                    | frinti
+                    | fmov
+                    | fcsel
+                    | fcmp
+                    | fccmp
+                    | fcvt
+                    | scvtf
+                    | ucvtf
+                    | fcvtns
+                    | fcvtnu
 
     sxtb: "sxtb"i op "," op
     sxtw: "sxtw"i op "," op
@@ -262,13 +290,14 @@ arm64_parser = Lark(r"""
     fdiv: "fdiv"i fp_register "," fp_register "," op
     fneg: "fneg"i fp_register "," op
     fabs: "fabs"i fp_register "," op
-    fmax: "fmax"i fp_register "," op
-    fmin: "fmin"i fp_register "," op
+    fmax: "fmax"i fp_register "," op "," op
+    fmin: "fmin"i fp_register "," op "," op
     fsqrt: "fsqrt"i fp_register "," op
     frinti: "frinti"i fp_register "," op
     
     fmov: "fmov"i fp_register "," op
     fcsel: "fcsel"i op "," op "," op "," cc
+    fcmp: "fcmp"i op "," op
     fccmp: "fccmp"i op "," op "," op "," cc
 
     fcvt: "fcvt"i fp_register "," op
@@ -281,6 +310,7 @@ arm64_parser = Lark(r"""
     %import common.CNAME
     %import common.HEXDIGIT
     %import common.INT
+    %import common.DECIMAL
     %import common.WS
     %import common.CPP_COMMENT
     %import common.C_COMMENT
