@@ -8,7 +8,7 @@ with open('requirements.txt') as f:
 
 setup(
     name="yapy-arm64",
-    version="0.1.4",
+    version="0.1.5",
     author="Luis Tavares",
     python_requires='>=3.6',
     long_description_content_type='text/markdown',
