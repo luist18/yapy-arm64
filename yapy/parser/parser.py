@@ -8,7 +8,7 @@ arm64_parser = Lark(r"""
 
     header: ".text"i
             | ".data"
-            | CNAME ":" (".double" | ".quad" | ".int" | ".float") ("+" | "-")? (HEXDIGIT | DECIMAL | INT)
+            | CNAME ":" (".double" | ".quad" | ".int" | ".float" | ".single") ("+" | "-")? (HEXDIGIT | DECIMAL | INT)
             | ".global"i /.+/
             | ".type"i (CNAME)? /.+/
             | ".model"i /.+/
@@ -23,13 +23,16 @@ arm64_parser = Lark(r"""
     w_register: "w"i INT
     x_register: "x"i INT
 
+    b_register: "b"i INT
     d_register: "d"i INT
     s_register: "s"i INT
     h_register: "h"i INT
 
-    ?normal_register: w_register | x_register | int_constant
+    simd_register: ("q"i | "v"i | "b"i) INT ("." (INT? ("b"i | "h"i | "s"i | "d"i) ("[" INT "]")?))?
 
-    ?fp_register: d_register | s_register | h_register | int_constant
+    ?normal_register: w_register | x_register | int_constant | simd_register
+
+    ?fp_register: d_register | s_register | h_register | b_register | int_constant
 
     ?goto: "."? CNAME
 
@@ -41,7 +44,7 @@ arm64_parser = Lark(r"""
 
     address: CNAME | "[" (x_register | CNAME) ("," op)? "]" "!"? ("," op)?
 
-    ?cc: "lo"i
+    !cc: "lo"i
         | "hi"i
         | "ls"i
         | "hs"i
@@ -58,7 +61,8 @@ arm64_parser = Lark(r"""
         | "cs"i
         | "cc"i
 
-    ?instruction: (arithmetic_instruction
+    ?instruction: (simd_instructions
+                | arithmetic_instruction
                 | bitwise_logical_instruction
                 | bitfield_instruction
                 | bit_byte_instruction
@@ -71,9 +75,6 @@ arm64_parser = Lark(r"""
 
     ?arithmetic_instruction: add
                             | sub
-                            | add
-                            | sub
-                            | neg
                             | neg
                             | mul
                             | umull
@@ -183,6 +184,35 @@ arm64_parser = Lark(r"""
                     | fcvtns
                     | fcvtnu
 
+    ?simd_instructions: dup
+                        | ins
+                        | xtn2
+                        | xtn
+                        | smov
+                        | umov
+                        | saddl2
+                        | saddl
+                        | saddw2
+                        | saddw
+                        | subhn
+                        | addp
+                        | addv
+                        | shl
+                        | sshr
+                        | ushr
+                        | bsl
+                        | rev64
+                        | saddlv
+                        | smaxv
+                        | sminv
+                        | cmcc
+                        | fcmcc
+                        | uaddlv
+                        | uminv
+                        | abs
+                        | umaxv
+                        | faddp
+
     sxtb: "sxtb"i op "," op
     sxtw: "sxtw"i op "," op
     uxtb: "uxtb"i op "," op
@@ -196,7 +226,6 @@ arm64_parser = Lark(r"""
     oasr: "asr"i op_t?
     ouxtw: "uxtb"i op_t?
     ouxtb: "uxtw"i op_t?
-
                             
     add: ("add"i | "adds"i) op "," op "," op
     sub: ("sub"i | "subs"i) op "," op "," op
@@ -289,22 +318,55 @@ arm64_parser = Lark(r"""
     fnmsub: "fnmsub"i fp_register "," fp_register "," op "," op
     fdiv: "fdiv"i fp_register "," fp_register "," op
     fneg: "fneg"i fp_register "," op
-    fabs: "fabs"i fp_register "," op
+    fabs: "fabs"i op "," op
     fmax: "fmax"i fp_register "," op "," op
     fmin: "fmin"i fp_register "," op "," op
     fsqrt: "fsqrt"i fp_register "," op
     frinti: "frinti"i fp_register "," op
     
-    fmov: "fmov"i fp_register "," op
+    fmov: "fmov"i op "," op
     fcsel: "fcsel"i op "," op "," op "," cc
     fcmp: "fcmp"i op "," op
     fccmp: "fccmp"i op "," op "," op "," cc
 
-    fcvt: "fcvt"i fp_register "," op
-    scvtf: "scvtf"i fp_register "," op
-    ucvtf: "ucvtf"i fp_register "," op
-    fcvtns: "fcvtns"i fp_register "," op
-    fcvtnu: "fcvtnu"i fp_register "," op
+    fcvt: "fcvt"i op "," op
+    scvtf: "scvtf"i op "," op
+    ucvtf: "ucvtf"i op "," op
+    fcvtns: "fcvtns"i op "," op
+    fcvtnu: "fcvtnu"i op "," op
+
+    dup: "dup"i simd_register "," op
+    ins: "ins"i simd_register "," op
+    xtn2: "xtn2"i simd_register "," simd_register
+    xtn: "xtn"i simd_register "," simd_register
+    smov: "smov"i op "," simd_register
+    umov: "umov"i op "," simd_register
+
+    saddl2: "saddl2"i simd_register "," simd_register "," simd_register
+    saddl: "saddl"i simd_register "," simd_register "," simd_register
+    saddw2: "saddw2"i simd_register "," simd_register "," simd_register
+    saddw: "saddw"i simd_register "," simd_register "," simd_register
+    subhn: "subhn"i simd_register "," simd_register "," simd_register
+    addp: "addp"i simd_register "," simd_register "," simd_register
+    shl: "shl"i simd_register "," simd_register "," op
+    sshr: "sshr"i simd_register "," simd_register "," op
+    ushr: "ushr"i simd_register "," simd_register "," op
+    bsl: "bsl"i simd_register "," simd_register "," simd_register
+    rev64: "rev64"i simd_register "," simd_register
+
+    addv: "addv"i op "," simd_register
+    saddlv: "saddlv"i op "," simd_register
+    smaxv: "smaxv"i op "," simd_register
+    sminv: "sminv"i op "," simd_register
+
+    cmcc: "cm"i cc simd_register "," simd_register "," op
+    fcmcc: "fcm"i cc simd_register "," simd_register "," simd_register
+
+    uaddlv: "uaddlv"i op "," op
+    uminv: "uminv"i op "," op
+    abs: "abs"i op "," op
+    umaxv: "umaxv"i op "," simd_register
+    faddp: "faddp"i op "," simd_register
 
     %import common.WORD
     %import common.CNAME
